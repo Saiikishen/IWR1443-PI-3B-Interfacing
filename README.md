@@ -138,7 +138,6 @@ SUBSYSTEM=="tty", ENV{ID_VENDOR_ID}=="0451", ENV{ID_MODEL_ID}=="bef3", ENV{ID_US
 SUBSYSTEM=="tty", ENV{ID_VENDOR_ID}=="0451", ENV{ID_MODEL_ID}=="bef3", ENV{ID_USB_INTERFACE_NUM}=="03", SYMLINK+="iwr_data", GROUP="dialout", MODE="0666"
 ```
 
-Save: **Ctrl+O → Enter → Ctrl+X**
 
 ### Apply Rules
 
@@ -154,21 +153,7 @@ lrwxrwxrwx 1 root root 7 ... /dev/iwr_cli  -> ttyACM0
 lrwxrwxrwx 1 root root 7 ... /dev/iwr_data -> ttyACM1
 ```
 
-> **Tip:** If symlinks don't appear after the trigger, physically unplug and replug the USB cable to force udev to re-process the rules.
 
-### Dry-Run Test (Optional Debug)
-
-```bash
-sudo udevadm test $(udevadm info -q path -n /dev/ttyACM0) 2>&1 | grep -E "iwr|SYMLINK|LINK"
-```
-
-You should see:
-```
-LINK 'iwr_cli'
-Successfully created symlink '/dev/iwr_cli' to '/dev/ttyACM0'
-```
-
----
 
 ## Step 6 — Verify Serial Port Access
 
@@ -194,24 +179,7 @@ Data port OK: /dev/iwr_data
 
 ---
 
-## Troubleshooting
 
-### `/dev/ttyUSB*` not found — only `/dev/ttyACM*` exist
-The XDS110 bridge on the IWR1443BOOST uses `cdc_acm`, not `cp210x`. Always use `/dev/ttyACM0` and `/dev/ttyACM1` (or the symlinks).
-
-### `modprobe cp210x` fails with "module not found"
-Irrelevant for this board — the correct driver is `cdc_acm`, which is built into the kernel.
-
-### udev `ATTRS{bInterfaceNumber}` rule not matching
-`ATTRS{}` cannot match attributes across different levels of the USB device tree. Use `ENV{ID_USB_INTERFACE_NUM}` instead (as shown in Step 5).
-
-### Symlinks not created after `udevadm trigger`
-Unplug and replug the USB cable. The `trigger` command doesn't always re-process already-connected CDC-ACM devices.
-
-### Permission denied on serial open
-Ensure your user is in the `dialout` group (`groups` command) and that you have logged out and back in after running `usermod`.
-
----
 
 ## Setup Checklist
 
@@ -224,20 +192,3 @@ Ensure your user is in the `dialout` group (`groups` command) and that you have 
 - [x] Persistent symlinks `/dev/iwr_cli` and `/dev/iwr_data` verified
 - [x] Both serial ports opened successfully from Python
 
----
-
-## Next Steps
-
-- [ ] Clone IWR1443 Python parser (mmWave SDK demo)
-- [ ] Send radar configuration `.cfg` file over CLI port
-- [ ] Parse binary TLV frames from data port
-- [ ] Publish detected object data to cloud via MQTT
-
----
-
-## References
-
-- [TI IWR1443BOOST Product Page](https://www.ti.com/tool/IWR1443BOOST)
-- [TI mmWave SDK](https://www.ti.com/tool/MMWAVE-SDK)
-- [IWR1443 Python Parser (GitHub)](https://github.com/ibaiGorordo/IWR1443-Read-Data-Python-MMWAVE-SDK-1)
-- [TI E2E: IWR1443 UART Interface](https://e2e.ti.com/support/sensors-group/sensors/f/sensors-forum/839387/iwr1443-related-to-uart-interface)
